@@ -98,10 +98,14 @@ func createDatabase() (*sql.DB, error) {
 }
 
 func handleBasket(w http.ResponseWriter, r *http.Request) {
-	basket := Basket{}
-	err := json.NewDecoder(r.Body).Decode(&basket)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Only DELETE method is allowed.", http.StatusMethodNotAllowed)
+		return
+	}
+
+	itemID := r.URL.Query().Get("id")
+	if itemID == "" {
+		http.Error(w, "Item ID is required.", http.StatusBadRequest)
 		return
 	}
 
@@ -112,18 +116,15 @@ func handleBasket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	for _, item := range basket.Items {
-		insertQuery := `
-			INSERT INTO items (name, price, quantity)
-			VALUES (?, ?, ?);
-		`
-		_, err := db.Exec(insertQuery, item.Name, item.Price, item.Quantity)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	deleteQuery := `
+		DELETE FROM items
+		WHERE id = ?;
+	`
+	_, err = db.Exec(deleteQuery, itemID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(basket)
+	w.WriteHeader(http.StatusOK)
 }

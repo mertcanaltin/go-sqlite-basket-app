@@ -84,3 +84,9 @@ curl -X GET "http://localhost:8000/api/basket/all?lower=0&upper=20&name=item"
 ```
 
 Please note that this is a simplified example, and in a production environment, you might need to handle authentication, error handling, and other security measures.
+
+### Remove Product
+
+```curl
+curl -X DELETE "http://localhost:8000/api/basket?id=3"
+```
